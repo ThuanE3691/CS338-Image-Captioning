@@ -172,7 +172,7 @@ class Imagecaptionmodel(nn.Module):
   
 
 def predict():
-  list_temp = {'image':['./vnp_Tennis_TTXVN_Open_2015_1.jpg']}
+  list_temp = {'image':['image.png']}
   demo = pd.DataFrame(list_temp)
   img_extract = extractFeatureEfficientNetV2(demo)
   img_loader = DataLoader(img_extract, batch_size = 1, shuffle = False)
@@ -182,7 +182,22 @@ def predict():
     pickle.dump(img_emb_test1, f)
 
   valid_img_emb = pd.read_pickle('valid_img_emb1.pkl')
-  st.write(gen_caption(1, demo['image'].iloc[0], valid_img_emb))
+  result = ' '.join(gen_caption(1, demo['image'].iloc[0], valid_img_emb)[:-1])
+  st.write(result)
 
+def main():
+    st.title("Image Uploader")
 
-model_inference = torch.load('./Bestmodel',map_location=torch.device('cpu'))
+    # File uploader widget
+    uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+
+    if uploaded_file is not None:
+        # Display the uploaded image
+        Image.open(uploaded_file).save('image.png')
+        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+        predict()
+
+if __name__ == '__main__':
+    model_inference = torch.load('./Bestmodel.model',map_location=torch.device('cpu'))
+    main()
+
