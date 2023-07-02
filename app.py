@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
-# import gdown
+import gdown
 
 
 class extractFeatureEfficientNetV2():
@@ -185,7 +185,7 @@ def predict(model_inference):
 def download_model_file():
     model_file_url = "https://drive.google.com/u/0/uc?id=1LZT6WihXPpXQ5DddR1PlSZ15w0YchZYc"
     output = "model.model"
-    # gdown.download(model_file_url, output, quiet=False)
+    gdown.download(model_file_url, output, quiet=False)
 
 def load_model():
     model_inference = torch.load('./model.model',map_location=torch.device('cpu'))
