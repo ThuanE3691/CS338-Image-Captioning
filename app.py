@@ -187,19 +187,13 @@ def predict(model_inference):
 
   valid_img_emb = pd.read_pickle('valid_img_emb1.pkl')
   result = ' '.join(gen_caption(1, demo['image'].iloc[0], valid_img_emb,model_inference)[:-1])
-  st.write(result)
+  display_result = f'<p style="font-size:25px;">Caption for the Image: {result}</p>'
+  st.markdown(display_result, unsafe_allow_html=True)
 
 def download_model_file():
     model_file_url = "https://drive.google.com/u/0/uc?id=1LZT6WihXPpXQ5DddR1PlSZ15w0YchZYc"
     output = "model.model"
-    with tqdm(total=0, unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            def update_progress(blocks_transferred, block_size, total_size):
-                if pbar.total == 0:
-                    pbar.reset(total=total_size)
-                pbar.update(blocks_transferred * block_size - pbar.n)
-                if pbar.n >= total_size:
-                    pbar.close()
-            gdown.download(model_file_url, output, quiet=False)
+    gdown.download(model_file_url, output, quiet=False)
 
 def load_model():
     model_inference = torch.load('./model.model',map_location=torch.device('cpu'))
@@ -212,17 +206,21 @@ def download_model():
       st.success("Model downloaded successfully!")
 
 def main():
-    model_inference = load_model()
-    st.title("Image Uploader")
+    try:
+      model_inference = load_model()
+      st.title("Image Uploader")
 
-    # File uploader widget
-    uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+      # File uploader widget
+      uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
-    if uploaded_file is not None:
-        # Display the uploaded image
-        Image.open(uploaded_file).save('image.png')
-        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
-        predict(model_inference)
+      if uploaded_file is not None:
+          # Display the uploaded image
+          Image.open(uploaded_file).save('image.png')
+          st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+          with st.spinner('Waiting for generate caption for image'):
+            predict(model_inference)
+    except:
+      st.warning('Not have model to predict, please download model')
 
 
 if __name__ == '__main__':
