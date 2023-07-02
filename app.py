@@ -1,24 +1,17 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-from collections import Counter
 pd.set_option('display.max_colwidth', None)
 from tqdm.auto import tqdm
 import pickle 
 import random
 import math
-from collections import Counter
-import tensorflow as tf
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
-import requests
 import gdown
 
 
