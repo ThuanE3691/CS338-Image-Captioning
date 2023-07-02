@@ -7,7 +7,6 @@ pd.set_option('display.max_colwidth', None)
 from tqdm.auto import tqdm
 import pickle 
 import random
-import re
 import math
 from collections import Counter
 import tensorflow as tf
