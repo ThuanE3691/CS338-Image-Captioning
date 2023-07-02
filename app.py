@@ -19,6 +19,8 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
+import requests
+import gdown
 
 
 class extractFeatureEfficientNetV2():
@@ -62,7 +64,7 @@ def get_vector(t_img):
   return my_emb
 
 
-def gen_caption(k , image_name, valid_img_emb):
+def gen_caption(k , image_name, valid_img_emb, model_inference):
   img = Image.open(image_name)
 
   plt.imshow(img)
@@ -96,6 +98,7 @@ embedding_size = 1280
 
 max_sequence_len = 35
 
+
 world_dict = pickle.load(open('./world_dict','rb'))
 word_to_idx = {word:idx for (idx,word) in enumerate(world_dict)}
 idx_to_word = {idx:word for (idx,word) in enumerate(world_dict)}
@@ -109,6 +112,7 @@ model_img = torchvision.models.efficientnet_v2_s(weights = torchvision.models.Ef
 model_img.eval()
 model_img_layer_4 = model_img._modules.get('features')
 EfficientNet_V2_layer_4 = fine_tune_model(model_img_layer_4).to(device)
+
 
 class position_encoding(nn.Module):
   def __init__(self,d_model = 512, max_len = max_sequence_len, dropout = 0.1):
@@ -171,7 +175,7 @@ class Imagecaptionmodel(nn.Module):
     return out, pad_mask
   
 
-def predict():
+def predict(model_inference):
   list_temp = {'image':['image.png']}
   demo = pd.DataFrame(list_temp)
   img_extract = extractFeatureEfficientNetV2(demo)
@@ -182,10 +186,33 @@ def predict():
     pickle.dump(img_emb_test1, f)
 
   valid_img_emb = pd.read_pickle('valid_img_emb1.pkl')
-  result = ' '.join(gen_caption(1, demo['image'].iloc[0], valid_img_emb)[:-1])
+  result = ' '.join(gen_caption(1, demo['image'].iloc[0], valid_img_emb,model_inference)[:-1])
   st.write(result)
 
+def download_model_file():
+    model_file_url = "https://drive.google.com/u/0/uc?id=1LZT6WihXPpXQ5DddR1PlSZ15w0YchZYc"
+    output = "model.model"
+    with tqdm(total=0, unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+            def update_progress(blocks_transferred, block_size, total_size):
+                if pbar.total == 0:
+                    pbar.reset(total=total_size)
+                pbar.update(blocks_transferred * block_size - pbar.n)
+                if pbar.n >= total_size:
+                    pbar.close()
+            gdown.download(model_file_url, output, quiet=False)
+
+def load_model():
+    model_inference = torch.load('./model.model',map_location=torch.device('cpu'))
+    return model_inference
+
+def download_model():
+    if st.button("Download Model"):
+      with st.spinner("Downloading model..."):
+          download_model_file()
+      st.success("Model downloaded successfully!")
+
 def main():
+    model_inference = load_model()
     st.title("Image Uploader")
 
     # File uploader widget
@@ -195,9 +222,10 @@ def main():
         # Display the uploaded image
         Image.open(uploaded_file).save('image.png')
         st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
-        predict()
+        predict(model_inference)
+
 
 if __name__ == '__main__':
-    model_inference = torch.load('./Bestmodel.model',map_location=torch.device('cpu'))
+    download_model()
     main()
 
