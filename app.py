@@ -13,6 +13,8 @@ import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
 import gdown
+import os
+
 
 
 class extractFeatureEfficientNetV2():
@@ -44,6 +46,34 @@ class fine_tune_model(nn.Module):
         x = self.conv(x)
         return x
     
+@st.cache_resource
+def init():
+  # The batch size is set to 64, meaning that 64 samples of data will be processed in one forward/backward pass of the network during training.
+  batch_size = 64
+
+  # The embedding size is set to 1280, meaning that each input sample will be represented by a vector of size 1280.
+  embedding_size = 1280
+
+  max_sequence_len = 35
+
+
+  world_dict = pickle.load(open('./world_dict','rb'))
+  word_to_idx = {word:idx for (idx,word) in enumerate(world_dict)}
+  idx_to_word = {idx:word for (idx,word) in enumerate(world_dict)}
+  vocab_size = len(word_to_idx)
+  start = word_to_idx['<start>']
+  end = word_to_idx['<end>']
+  pad = word_to_idx['<pad>']
+
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+  model_img = torchvision.models.efficientnet_v2_s(weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT).to(device)
+  model_img.eval()
+  model_img_layer_4 = model_img._modules.get('features')
+  EfficientNet_V2_layer_4 = fine_tune_model(model_img_layer_4).to(device)
+  return batch_size, embedding_size, max_sequence_len, world_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 
+    
+batch_size, embedding_size, max_sequence_len, world_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 = init()
+
 def get_vector(t_img):
   my_emb = torch.zeros(1, embedding_size, 7, 7)
   t_img = torch.autograd.Variable(t_img).to(device)
@@ -57,6 +87,9 @@ def get_vector(t_img):
 
 
 def gen_caption(k , image_name, valid_img_emb, model_inference):
+
+  max_sequence_len = globals()['max_sequence_len']
+
   img = Image.open(image_name)
 
   plt.imshow(img)
@@ -82,28 +115,7 @@ def gen_caption(k , image_name, valid_img_emb, model_inference):
     caption.append(word)
   return caption
 
-# The batch size is set to 64, meaning that 64 samples of data will be processed in one forward/backward pass of the network during training.
-batch_size = 64
 
-# The embedding size is set to 1280, meaning that each input sample will be represented by a vector of size 1280.
-embedding_size = 1280
-
-max_sequence_len = 35
-
-
-world_dict = pickle.load(open('./world_dict','rb'))
-word_to_idx = {word:idx for (idx,word) in enumerate(world_dict)}
-idx_to_word = {idx:word for (idx,word) in enumerate(world_dict)}
-vocab_size = len(word_to_idx)
-start = word_to_idx['<start>']
-end = word_to_idx['<end>']
-pad = word_to_idx['<pad>']
-
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_img = torchvision.models.efficientnet_v2_s(weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT).to(device)
-model_img.eval()
-model_img_layer_4 = model_img._modules.get('features')
-EfficientNet_V2_layer_4 = fine_tune_model(model_img_layer_4).to(device)
 
 
 class position_encoding(nn.Module):
@@ -129,7 +141,7 @@ class position_encoding(nn.Module):
 class Imagecaptionmodel(nn.Module):
   def __init__(self, vocab_size=vocab_size, embedding_size=embedding_size, max_len=max_sequence_len, n_head=16, num_decoder_layer=4):
     super().__init__()
-    self.position_encoding = position_encoding(d_model = embedding_size)
+    self.position_encoding = position_encoding(d_model = embedding_size, max_len = max_len)
 
     self.transformer_decoder_layer  = nn.TransformerDecoderLayer(d_model = embedding_size, nhead = n_head)
     self.transformer_decoder = nn.TransformerDecoder(self.transformer_decoder_layer, num_layers = num_decoder_layer)
@@ -182,40 +194,69 @@ def predict(model_inference):
   display_result = f'<p style="font-size:25px;">Caption for the Image: {result}</p>'
   st.markdown(display_result, unsafe_allow_html=True)
 
+@st.cache_resource(show_spinner=False)
 def download_model_file():
     model_file_url = "https://drive.google.com/u/0/uc?id=1LZT6WihXPpXQ5DddR1PlSZ15w0YchZYc"
     output = "model.model"
     gdown.download(model_file_url, output, quiet=False)
 
+@st.cache_resource
 def load_model():
     model_inference = torch.load('./model.model',map_location=torch.device('cpu'))
     return model_inference
 
+@st.cache_resource
 def download_model():
     if st.button("Download Model"):
       with st.spinner("Downloading model..."):
           download_model_file()
       st.success("Model downloaded successfully!")
 
-def main():
-    try:
-      model_inference = load_model()
-      st.title("Image Uploader")
+def main(model_inference):
+    
+    st.title("Image Uploader")
 
-      # File uploader widget
-      uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+    # File uploader widget
+    uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
-      if uploaded_file is not None:
-          # Display the uploaded image
-          Image.open(uploaded_file).save('image.png')
-          st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
-          with st.spinner('Waiting for generate caption for image'):
-            predict(model_inference)
-    except:
-      st.warning('Not have model to predict, please download model')
+    if uploaded_file is not None:
+        # Display the uploaded image
+        Image.open(uploaded_file).save('image.png')
+        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+        with st.spinner('Waiting for generate caption for image'):
+          predict(model_inference)
 
 
-if __name__ == '__main__':
-    download_model()
-    main()
+
+def is_model_available():
+    return os.path.isfile('./model.model')
+
+def check_model():
+  model = None
+  if is_model_available():
+    st.success("Model is available!")
+    model = load_model()
+  else:
+    st.error("Model is not available. Please download it.")
+    if st.button("Download Model"):
+        download_model_file()
+        st.success("Model downloaded successfully!")
+        model = load_model()
+  return model
+
+
+model_inference = None
+with st.spinner('Please hold on for a moment while we verify and prepare the model to assist you'):
+  if is_model_available():
+    st.success("Model is available!")
+    model_inference = load_model()
+  else:
+    st.error("Model is not available. Please download it.")
+    if st.button("Download Model"):
+        download_model_file()
+        st.success("Model downloaded successfully!")
+        model_inference = load_model()
+
+if model_inference:
+  main(model_inference)
 
