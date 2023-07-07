@@ -202,7 +202,7 @@ def download_model_file():
 
 @st.cache_resource
 def load_model():
-    model_inference = torch.load('app/model.model',map_location=torch.device('cpu'))
+    model_inference = torch.load('./app/model.model',map_location=torch.device('cpu'))
     return model_inference
 
 @st.cache_resource
