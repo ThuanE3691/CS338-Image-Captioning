@@ -57,9 +57,9 @@ def init():
   max_sequence_len = 35
 
 
-  world_dict = pickle.load(open('./world_dict','rb'))
-  word_to_idx = {word:idx for (idx,word) in enumerate(world_dict)}
-  idx_to_word = {idx:word for (idx,word) in enumerate(world_dict)}
+  word_dict = pickle.load(open('./app/word_dict','rb'))
+  word_to_idx = {word:idx for (idx,word) in enumerate(word_dict)}
+  idx_to_word = {idx:word for (idx,word) in enumerate(word_dict)}
   vocab_size = len(word_to_idx)
   start = word_to_idx['<start>']
   end = word_to_idx['<end>']
@@ -70,9 +70,9 @@ def init():
   model_img.eval()
   model_img_layer_4 = model_img._modules.get('features')
   EfficientNet_V2_layer_4 = fine_tune_model(model_img_layer_4).to(device)
-  return batch_size, embedding_size, max_sequence_len, world_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 
+  return batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 
     
-batch_size, embedding_size, max_sequence_len, world_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 = init()
+batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 = init()
 
 def get_vector(t_img):
   my_emb = torch.zeros(1, embedding_size, 7, 7)
@@ -202,7 +202,7 @@ def download_model_file():
 
 @st.cache_resource
 def load_model():
-    model_inference = torch.load('./model.model',map_location=torch.device('cpu'))
+    model_inference = torch.load('app/model.model',map_location=torch.device('cpu'))
     return model_inference
 
 @st.cache_resource
@@ -229,7 +229,7 @@ def main(model_inference):
 
 
 def is_model_available():
-    return os.path.isfile('./model.model')
+    return os.path.isfile('./app/model.model')
 
 def check_model():
   model = None
