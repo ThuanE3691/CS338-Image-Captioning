@@ -57,7 +57,7 @@ def init():
   max_sequence_len = 35
 
 
-  word_dict = pickle.load(open('./app/word_dict','rb'))
+  word_dict = pickle.load(open('./app/word.dict','rb'))
   word_to_idx = {word:idx for (idx,word) in enumerate(word_dict)}
   idx_to_word = {idx:word for (idx,word) in enumerate(word_dict)}
   vocab_size = len(word_to_idx)
