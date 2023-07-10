@@ -73,6 +73,7 @@ def init():
   return batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 
     
 batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 = init()
+path_model = "./model.model"
 
 def get_vector(t_img):
   my_emb = torch.zeros(1, embedding_size, 7, 7)
@@ -197,12 +198,12 @@ def predict(model_inference):
 @st.cache_resource(show_spinner=False)
 def download_model_file():
     model_file_url = "https://drive.google.com/u/1/uc?id=1GqZQ_-tayQj5QGvU3dpu935O0psaJagd&export=download"
-    output = "model.model"
+    output = path_model
     gdown.download(model_file_url, output, quiet=False)
 
 @st.cache_resource
 def load_model():
-    model_inference = torch.load('./app/model.model',map_location=torch.device('cpu'))
+    model_inference = torch.load(path_model,map_location=torch.device('cpu'))
     return model_inference
 
 @st.cache_resource
@@ -229,7 +230,7 @@ def main(model_inference):
 
 
 def is_model_available():
-    return os.path.isfile('./model.model')
+    return os.path.isfile(path_model)
 
 def check_model():
   model = None
