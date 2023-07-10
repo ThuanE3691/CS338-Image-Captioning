@@ -196,7 +196,7 @@ def predict(model_inference):
 
 @st.cache_resource(show_spinner=False)
 def download_model_file():
-    model_file_url = "https://drive.google.com/u/0/uc?id=1LZT6WihXPpXQ5DddR1PlSZ15w0YchZYc"
+    model_file_url = "https://drive.google.com/u/1/uc?id=1GqZQ_-tayQj5QGvU3dpu935O0psaJagd&export=download"
     output = "model.model"
     gdown.download(model_file_url, output, quiet=False)
 
@@ -229,7 +229,7 @@ def main(model_inference):
 
 
 def is_model_available():
-    return os.path.isfile('./app/model.model')
+    return os.path.isfile('./model.model')
 
 def check_model():
   model = None

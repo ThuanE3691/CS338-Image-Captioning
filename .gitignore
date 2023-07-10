@@ -1,5 +1,7 @@
 # Model
 *.model
+*.png
+*.pkl
 
 
 # Outside
