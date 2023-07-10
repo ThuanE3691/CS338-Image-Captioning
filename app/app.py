@@ -16,6 +16,29 @@ import gdown
 import os
 
 
+st.title("Vietnamese Image Captioning")
+
+author_content = \
+  "<div>\
+  <p style='font-size:30px'>Author</p>\
+    <ul>\
+     <li style='font-size:20px'>20521546 - Lê Tấn Lộc</li>\
+     <li style='font-size:20px'>20520795 - Nguyễn Minh Thuận</li>\
+     <li style='font-size:20px'>20520313 - Nguyễn Hồng Anh Thư</li>\
+    <ul/>\
+  </div>"
+
+introduction_content = \
+  "<div>\
+  <p style='font-size:30px'>Introduction</p>\
+  <p style='font-size:20px'>The system will automatically create caption for your image (the image relate to soccer, baseball, tennis…)</p>\
+  </div>"
+
+
+st.write(author_content,unsafe_allow_html= True)
+st.write(introduction_content,unsafe_allow_html= True)
+st.write("<p style='font-size:30px'>Loading model</p>", unsafe_allow_html=True)
+
 path_model = "model.model"
 
 class extractFeatureEfficientNetV2():
@@ -216,10 +239,16 @@ def download_model():
 
 def main(model_inference):
     
-    st.title("Image Uploader")
+    st.markdown("""
+              <style> 
+                .css-16idsys p
+                {
+                  font-size:30px;
+                } 
+              </style>""", unsafe_allow_html=True)
 
     # File uploader widget
-    uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+    uploaded_file = st.file_uploader(label="Upload an image", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
         # Display the uploaded image
@@ -260,5 +289,6 @@ with st.spinner('Please hold on for a moment while we verify and prepare the mod
         model_inference = load_model()
 
 if model_inference:
+  
   main(model_inference)
 
