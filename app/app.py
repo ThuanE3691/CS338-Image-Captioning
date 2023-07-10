@@ -16,6 +16,7 @@ import gdown
 import os
 
 
+path_model = "model.model"
 
 class extractFeatureEfficientNetV2():
   def __init__(self,data):
@@ -65,6 +66,7 @@ def init():
   end = word_to_idx['<end>']
   pad = word_to_idx['<pad>']
 
+
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
   model_img = torchvision.models.efficientnet_v2_s(weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT).to(device)
   model_img.eval()
@@ -73,7 +75,6 @@ def init():
   return batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 
     
 batch_size, embedding_size, max_sequence_len, word_dict, word_to_idx, idx_to_word, vocab_size, start, end, pad,device, model_img, model_img_layer_4, EfficientNet_V2_layer_4 = init()
-path_model = "./model.model"
 
 def get_vector(t_img):
   my_emb = torch.zeros(1, embedding_size, 7, 7)
@@ -139,7 +140,7 @@ class position_encoding(nn.Module):
     self.pe = self.pe[:x.size(0), :, :]
     return self.dropout(self.pe +x)
   
-class Imagecaptionmodel(nn.Module):
+class Imagecaptionmodel_EfficientNetV2(nn.Module):
   def __init__(self, vocab_size=vocab_size, embedding_size=embedding_size, max_len=max_sequence_len, n_head=16, num_decoder_layer=4):
     super().__init__()
     self.position_encoding = position_encoding(d_model = embedding_size, max_len = max_len)
